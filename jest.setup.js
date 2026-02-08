@@ -1,23 +1,41 @@
-// jest.setup.js
-import 'react-native-gesture-handler/jestSetup';
+import { jest } from '@jest/globals';
 
-// Mock async storage
-jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
-);
-
-// Mock geolocation
+// Mock Geolocation (för GPS-hastighet)
 jest.mock('@react-native-community/geolocation', () => ({
-  getCurrentPosition: jest.fn((success) => {
-    success({
-      coords: {
-        latitude: 59.3293,
-        longitude: 18.0686,
-        altitude: 0,
-        accuracy: 5,
-        altitudeAccuracy: 5,
-        heading: 0,
-        speed: 0,
-      },
-      timestamp: Date.now(),
-    });
+  setRNConfiguration: jest.fn(),
+  watchPosition: jest.fn((success) => {
+    // Vi simulerar att vi startar prenumerationen
+    return 1;
+  }),
+  clearWatch: jest.fn(),
+  stopObservation: jest.fn(),
+}));
+
+// Mock React Native Sensors (för vibrationer)
+jest.mock('react-native-sensors', () => ({
+  accelerometer: {
+    subscribe: jest.fn(() => ({
+      unsubscribe: jest.fn(),
+    })),
+  },
+  setUpdateIntervalForType: jest.fn(),
+  SensorTypes: {
+    accelerometer: 'accelerometer',
+  },
+}));
+
+// Mock Background Actions
+jest.mock('react-native-background-actions', () => ({
+  start: jest.fn(),
+  stop: jest.fn(),
+  isRunning: jest.fn(() => false),
+  updateNotification: jest.fn(),
+}));
+
+// Mock Push Notifications
+jest.mock('react-native-push-notification', () => ({
+  configure: jest.fn(),
+  createChannel: jest.fn(),
+  localNotification: jest.fn(),
+  cancelLocalNotification: jest.fn(),
+}));
