@@ -35,6 +35,7 @@ export function useParkingDetector(
   const possiblyParkedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAccelDataRef = useRef<AccelerometerData | null>(null);
   const lastLocationDataRef = useRef<LocationData | null>(null);
+  const vibrationLevelRef = useRef<number>(0);
 
   // Update ref when state changes
   useEffect(() => {
@@ -42,16 +43,19 @@ export function useParkingDetector(
   }, [state]);
 
   // Handle accelerometer data
-  const handleAccelerometerData = useCallback(
-    (data: AccelerometerData) => {
-      lastAccelDataRef.current = data;
-      const vibration = sensorService.constructor.prototype.constructor.calculateVibrationMagnitude
-        ? (sensorService as any).constructor.calculateVibrationMagnitude(data)
-        : Math.abs(Math.sqrt(data.x ** 2 + data.y ** 2 + data.z ** 2) - 9.8);
-      setVibrationLevel(vibration);
-    },
-    [],
-  );
+const handleAccelerometerData = useCallback(
+  (data: AccelerometerData) => {
+    lastAccelDataRef.current = data;
+    
+    // Beräkna vibration direkt
+    const magnitude = Math.sqrt(data.x ** 2 + data.y ** 2 + data.z ** 2);
+    const vibration = Math.abs(magnitude - 9.8);
+    
+    setVibrationLevel(vibration);
+    vibrationLevelRef.current = vibration;
+  },
+  [],
+);
 
   // Handle location data and state transitions
   const handleLocationData = useCallback(
@@ -61,7 +65,7 @@ export function useParkingDetector(
       setCurrentSpeed(speedKmh);
 
       const currentState = stateRef.current;
-      const vibration = vibrationLevel;
+      const vibration = vibrationLevelRef.current;
 
       // State machine logic
       switch (currentState) {
