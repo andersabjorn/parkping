@@ -5,6 +5,8 @@ import { DEV_CONFIG } from '../src/types';
 // Vi mockar SensorService så vi slipper använda en riktig telefon i testet
 import { sensorService } from '../src/services/SensorService';
 jest.mock('../src/services/SensorService');
+jest.mock('../src/services/NotificationService');
+jest.mock('../src/services/BackgroundService');
 
 describe('useParkingDetector - Happy Path', () => {
   
