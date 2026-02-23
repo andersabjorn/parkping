@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react-native';
 import { useParkingDetector } from '../src/hooks/useParkingDetector';
 import { DEV_CONFIG } from '../src/types';
 
-// Mocka alla services
+// Mock all services
 import { sensorService } from '../src/services/SensorService';
 jest.mock('../src/services/SensorService');
 jest.mock('../src/services/NotificationService');
@@ -10,18 +10,21 @@ jest.mock('../src/services/BackgroundService');
 
 describe('useParkingDetector - Happy Path', () => {
   
-  it('skall gå från "idle" till "monitoring" när man startar bevakning', async () => {
+  it('should transition from "idle" to "monitoring" when starting monitoring', async () => {
+    // 1. ARRANGE
     (sensorService.requestPermissions as jest.Mock).mockResolvedValue(true);
     const { result } = renderHook(() => useParkingDetector(DEV_CONFIG));
 
+    // 2. ACT
     await act(async () => {
       await result.current.startMonitoring();
     });
 
+    // 3. ASSERT
     expect(result.current.state).toBe('monitoring');
   });
   
-  it('skall gå från "monitoring" till "driving" när hastighet ökar', async () => {
+  it('should transition from "monitoring" to "driving" when speed increases', async () => {
     let locationCallback: any;
     let accelerometerCallback: any;
     
@@ -43,17 +46,17 @@ describe('useParkingDetector - Happy Path', () => {
     
     expect(result.current.state).toBe('monitoring');
     
-    // ACT - Skicka accelerometer data
-  await act(async () => {
-  accelerometerCallback({
-    x: 5.0,   // Högre värden
-    y: 5.0,
-    z: 15.0,  // Detta ger vibration > 1.5
-    timestamp: Date.now(),
-  });
-});
+    // ACT - Send accelerometer data
+    await act(async () => {
+      accelerometerCallback({
+        x: 5.0,
+        y: 5.0,
+        z: 15.0,
+        timestamp: Date.now(),
+      });
+    });
     
-    // ACT - Skicka location data
+    // ACT - Send location data
     await act(async () => {
       locationCallback({
         latitude: 59.3293,
@@ -64,6 +67,7 @@ describe('useParkingDetector - Happy Path', () => {
       });
     });
     
+    // ASSERT
     expect(result.current.state).toBe('driving');
   });
 
