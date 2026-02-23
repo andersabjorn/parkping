@@ -43,19 +43,19 @@ export function useParkingDetector(
   }, [state]);
 
   // Handle accelerometer data
-const handleAccelerometerData = useCallback(
-  (data: AccelerometerData) => {
-    lastAccelDataRef.current = data;
-    
-    // Beräkna vibration direkt
-    const magnitude = Math.sqrt(data.x ** 2 + data.y ** 2 + data.z ** 2);
-    const vibration = Math.abs(magnitude - 9.8);
-    
-    setVibrationLevel(vibration);
-    vibrationLevelRef.current = vibration;
-  },
-  [],
-);
+  const handleAccelerometerData = useCallback(
+    (data: AccelerometerData) => {
+      lastAccelDataRef.current = data;
+      
+      // Calculate vibration directly
+      const magnitude = Math.sqrt(data.x ** 2 + data.y ** 2 + data.z ** 2);
+      const vibration = Math.abs(magnitude - 9.8);
+      
+      setVibrationLevel(vibration);
+      vibrationLevelRef.current = vibration;
+    },
+    [],
+  );
 
   // Handle location data and state transitions
   const handleLocationData = useCallback(
@@ -77,8 +77,8 @@ const handleAccelerometerData = useCallback(
           ) {
             setState('driving');
             backgroundService.updateNotification(
-              'Körning detekterad',
-              `Hastighet: ${speedKmh.toFixed(1)} km/h`,
+              'Driving detected',
+              `Speed: ${speedKmh.toFixed(1)} km/h`,
             );
           }
           break;
@@ -86,16 +86,16 @@ const handleAccelerometerData = useCallback(
         case 'driving':
           // Update notification with current speed
           backgroundService.updateNotification(
-            'Kör',
-            `Hastighet: ${speedKmh.toFixed(1)} km/h`,
+            'Driving',
+            `Speed: ${speedKmh.toFixed(1)} km/h`,
           );
 
           // Check if stopped
           if (speedKmh < config.parkedSpeedThreshold) {
             setState('possibly_parked');
             backgroundService.updateNotification(
-              'Möjlig parkering',
-              'Väntar på bekräftelse...',
+              'Possibly parked',
+              'Waiting for confirmation...',
             );
 
             // Start confirmation timer
@@ -104,8 +104,8 @@ const handleAccelerometerData = useCallback(
                 setState('parked');
                 notificationService.sendParkingNotification();
                 backgroundService.updateNotification(
-                  'Parkerad!',
-                  'Notis skickad',
+                  'Parked!',
+                  'Notification sent',
                 );
 
                 // Reset to monitoring after a short delay
@@ -113,8 +113,8 @@ const handleAccelerometerData = useCallback(
                   if (stateRef.current === 'parked') {
                     setState('monitoring');
                     backgroundService.updateNotification(
-                      'ParkPing är aktiv',
-                      'Övervakar för parkering...',
+                      'ParkPing is active',
+                      'Monitoring for parking...',
                     );
                   }
                 }, 5000);
@@ -132,8 +132,8 @@ const handleAccelerometerData = useCallback(
             }
             setState('driving');
             backgroundService.updateNotification(
-              'Kör igen',
-              `Hastighet: ${speedKmh.toFixed(1)} km/h`,
+              'Driving again',
+              `Speed: ${speedKmh.toFixed(1)} km/h`,
             );
           }
           break;
@@ -143,8 +143,8 @@ const handleAccelerometerData = useCallback(
           if (speedKmh > config.drivingSpeedThreshold) {
             setState('monitoring');
             backgroundService.updateNotification(
-              'ParkPing är aktiv',
-              'Övervakar för parkering...',
+              'ParkPing is active',
+              'Monitoring for parking...',
             );
           }
           break;
@@ -161,7 +161,7 @@ const handleAccelerometerData = useCallback(
       // Request permissions
       const hasPermission = await sensorService.requestPermissions();
       if (!hasPermission) {
-        setError('Platsbehörighet nekad');
+        setError('Location permission denied');
         return;
       }
 
@@ -174,7 +174,7 @@ const handleAccelerometerData = useCallback(
         config.sensorUpdateInterval,
       );
       sensorService.startLocationTracking(handleLocationData, err => {
-        setError(`Platsfel: ${err.message}`);
+        setError(`Location error: ${err.message}`);
       });
 
       // Start background service
@@ -189,7 +189,7 @@ const handleAccelerometerData = useCallback(
       setState('monitoring');
       setIsMonitoring(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Okänt fel';
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);
       console.error('Failed to start monitoring:', err);
     }
